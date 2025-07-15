@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+    <title>Slowchik - Audio Player</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="main-title">Slowchik</h1>
+            <p class="subtitle">Advanced Audio Processing Platform</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon visualization"></div>
+                    <h3>Audio Visualization</h3>
+                    <p>Real-time frequency analysis with beautiful waveform visualization</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon effects"></div>
+                    <h3>Audio Effects</h3>
+                    <p>Speed control, reverb, pitch shifting, and bass enhancement</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon tools"></div>
+                    <h3>Professional Tools</h3>
+                    <p>Web-based audio processing with professional-grade controls</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon cross-platform"></div>
+                    <h3>Cross-Platform</h3>
+                    <p>Works on all devices with modern web browser support</p>
+                </div>
+            </div>
+            
+            <div class="scroll-indicator">
+                <p>Scroll down to start</p>
+                <div class="scroll-arrow"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="app-section">
+        <div class="settings-container">
+            <h2>Audio Control</h2>
+            <div class="controls-container">
+                <div class="control-group">
+                    <label for="speed">Speed</label>
+                    <input type="range" id="speed" min="0.5" max="1.5" step="0.05" value="1.0">
+                    <span class="value" id="speed-value">1.0x</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="reverb">Reverb</label>
+                    <input type="range" id="reverb" min="0" max="100" step="1" value="0">
+                    <span class="value" id="reverb-value">0%</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="pitch">Pitch</label>
+                    <input type="range" id="pitch" min="-12" max="12" step="1" value="0">
+                    <span class="value" id="pitch-value">0</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="bass">Bass</label>
+                    <input type="range" id="bass" min="-20" max="20" step="1" value="0">
+                    <span class="value" id="bass-value">0 dB</span>
+                </div>
+            </div>
+            
+            <div class="reset-button">
+                <button id="reset">Reset Settings</button>
+            </div>
+        </div>
+
+        <div class="audio-container">
+            <div class="upload-section">
+                <input type="file" id="audioFile" accept="audio/*" style="display: none;">
+                <button id="uploadBtn" class="upload-btn">
+                    <span class="upload-icon"></span>
+                    Load Audio File
+                </button>
+                <div class="file-info" id="fileInfo">No file selected</div>
+            </div>
+
+            <div class="visualizer-section">
+                <canvas id="visualizer" width="800" height="200"></canvas>
+                <div class="visualizer-placeholder">
+                    <span>Audio visualization will appear here</span>
+                </div>
+            </div>
+
+            <div class="playback-controls">
+                <button id="playPauseBtn" class="control-btn" disabled>
+                    <span class="play-icon play"></span>
+                </button>
+                
+                <div class="time-controls">
+                    <span id="currentTime">0:00</span>
+                    <input type="range" id="progressBar" min="0" max="100" value="0" disabled>
+                    <span id="totalTime">0:00</span>
+                </div>
+                
+                <div class="volume-control">
+                    <span class="volume-icon"></span>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
