@@ -396,7 +396,7 @@ h2 {
 .controls-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    
     flex: 1;
     justify-content: center;
 }

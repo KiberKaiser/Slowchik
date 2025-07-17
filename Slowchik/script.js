@@ -6,7 +6,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let dataArray;
     let isPlaying = false;
     let currentAudio = null;
-
+    
+    // Добавляем переменные для аудио эффектов
+    let gainNode;
+    let bassFilter;
+    let convolverNode;
+    let pitchShiftNode;
 
     const sliders = {
         speed: {
@@ -47,6 +52,87 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
+    }
+
+    // Функция для создания импульсной характеристики реверба
+    function createReverbImpulse(duration, decay) {
+        const sampleRate = audioContext.sampleRate;
+        const length = sampleRate * duration;
+        const impulse = audioContext.createBuffer(2, length, sampleRate);
+        
+        for (let channel = 0; channel < 2; channel++) {
+            const channelData = impulse.getChannelData(channel);
+            for (let i = 0; i < length; i++) {
+                const n = length - i;
+                channelData[i] = (Math.random() * 2 - 1) * Math.pow(n / length, decay);
+            }
+        }
+        return impulse;
+    }
+
+    // Функция для создания аудио цепочки эффектов
+    function setupAudioEffects() {
+        if (!audioContext || !currentAudio) return;
+
+        // Создаем узлы эффектов
+        const source = audioContext.createMediaElementSource(currentAudio);
+        
+        // Bass EQ фильтр
+        bassFilter = audioContext.createBiquadFilter();
+        bassFilter.type = 'lowshelf';
+        bassFilter.frequency.value = 200;
+        bassFilter.gain.value = 0;
+
+        // Reverb конвольвер
+        convolverNode = audioContext.createConvolver();
+        convolverNode.buffer = createReverbImpulse(2, 2);
+
+        // Сухой и мокрый сигнал для реверба
+        const dryGain = audioContext.createGain();
+        const wetGain = audioContext.createGain();
+        dryGain.gain.value = 1;
+        wetGain.gain.value = 0;
+
+        // Основной gain узел
+        gainNode = audioContext.createGain();
+        gainNode.gain.value = 1;
+
+        // Анализатор для визуализации
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+
+        // Соединяем аудио цепочку
+        source.connect(bassFilter);
+        
+        // Разветвление для реверба
+        bassFilter.connect(dryGain);
+        bassFilter.connect(convolverNode);
+        convolverNode.connect(wetGain);
+        
+        // Смешиваем сухой и мокрый сигналы
+        dryGain.connect(gainNode);
+        wetGain.connect(gainNode);
+        
+        gainNode.connect(analyser);
+        analyser.connect(audioContext.destination);
+
+        // Сохраняем ссылки для управления эффектами
+        currentAudio.dryGain = dryGain;
+        currentAudio.wetGain = wetGain;
+    }
+
+    // Функция для применения эффекта pitch (базовая реализация через playbackRate)
+    function applyPitchShift(semitones) {
+        if (!currentAudio) return;
+        
+        // Преобразуем полутона в коэффициент частоты
+        const pitchFactor = Math.pow(2, semitones / 12);
+        currentAudio.preservesPitch = false;
+        currentAudio.playbackRate = currentAudio.playbackRate || 1;
+        
+        // Применяем pitch без изменения скорости (приблизительно)
+        const speedSliderValue = parseFloat(sliders.speed.slider.value);
+        currentAudio.playbackRate = speedSliderValue * pitchFactor;
     }
 
     function updateValue(sliderName, value) {
@@ -122,6 +208,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 playPauseBtn.disabled = false;
                 progressBar.disabled = false;
                 progressBar.max = currentAudio.duration;
+                
+                // Настраиваем аудио эффекты после загрузки
+                setupAudioEffects();
             });
 
             currentAudio.addEventListener('timeupdate', function() {
@@ -135,13 +224,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const playIcon = playPauseBtn.querySelector('.play-icon');
                 playIcon.className = 'play-icon play';
             });
-
-            const source = audioContext.createMediaElementSource(currentAudio);
-            analyser = audioContext.createAnalyser();
-            analyser.fftSize = 256;
-            
-            source.connect(analyser);
-            analyser.connect(audioContext.destination);
 
             document.querySelector('.visualizer-placeholder').style.display = 'none';
             drawVisualizer();
@@ -180,7 +262,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-
     Object.keys(sliders).forEach(sliderName => {
         const config = sliders[sliderName];
         
@@ -191,15 +272,27 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (currentAudio) {
                 if (sliderName === 'speed') {
-                    currentAudio.playbackRate = parseFloat(this.value);
+                    const speedValue = parseFloat(this.value);
+                    const pitchValue = parseInt(sliders.pitch.slider.value);
+                    const pitchFactor = Math.pow(2, pitchValue / 12);
+                    currentAudio.playbackRate = speedValue * pitchFactor;
                 }
-             
+                else if (sliderName === 'reverb' && currentAudio.wetGain && currentAudio.dryGain) {
+                    const reverbAmount = parseFloat(this.value) / 100;
+                    currentAudio.wetGain.gain.value = reverbAmount;
+                    currentAudio.dryGain.gain.value = 1 - reverbAmount * 0.5;
+                }
+                else if (sliderName === 'pitch') {
+                    applyPitchShift(parseInt(this.value));
+                }
+                else if (sliderName === 'bass' && bassFilter) {
+                    bassFilter.gain.value = parseFloat(this.value);
+                }
             }
             
             console.log(`${sliderName} изменен на: ${this.value}`);
         });
     });
-
 
     function resetAllSettings() {
         const defaultValues = {
@@ -217,6 +310,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (currentAudio) {
             currentAudio.playbackRate = 1;
+            
+            if (currentAudio.wetGain && currentAudio.dryGain) {
+                currentAudio.wetGain.gain.value = 0;
+                currentAudio.dryGain.gain.value = 1;
+            }
+            
+            if (bassFilter) {
+                bassFilter.gain.value = 0;
+            }
         }
 
         console.log('Все настройки сброшены');
