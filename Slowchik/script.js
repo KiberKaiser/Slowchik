@@ -1,13 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     let audioContext;
-    let audioBuffer;
     let audioSource;
     let analyser;
     let dataArray;
     let isPlaying = false;
     let currentAudio = null;
     
-    // Добавляем переменные для аудио эффектов
     let gainNode;
     let bassFilter;
     let convolverNode;
@@ -54,7 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Функция для создания импульсной характеристики реверба
     function createReverbImpulse(duration, decay) {
         const sampleRate = audioContext.sampleRate;
         const length = sampleRate * duration;
@@ -70,67 +67,53 @@ document.addEventListener('DOMContentLoaded', function() {
         return impulse;
     }
 
-    // Функция для создания аудио цепочки эффектов
     function setupAudioEffects() {
         if (!audioContext || !currentAudio) return;
 
-        // Создаем узлы эффектов
         const source = audioContext.createMediaElementSource(currentAudio);
         
-        // Bass EQ фильтр
         bassFilter = audioContext.createBiquadFilter();
         bassFilter.type = 'lowshelf';
         bassFilter.frequency.value = 200;
         bassFilter.gain.value = 0;
 
-        // Reverb конвольвер
         convolverNode = audioContext.createConvolver();
         convolverNode.buffer = createReverbImpulse(2, 2);
 
-        // Сухой и мокрый сигнал для реверба
         const dryGain = audioContext.createGain();
         const wetGain = audioContext.createGain();
         dryGain.gain.value = 1;
         wetGain.gain.value = 0;
 
-        // Основной gain узел
         gainNode = audioContext.createGain();
         gainNode.gain.value = 1;
 
-        // Анализатор для визуализации
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
 
-        // Соединяем аудио цепочку
         source.connect(bassFilter);
         
-        // Разветвление для реверба
         bassFilter.connect(dryGain);
         bassFilter.connect(convolverNode);
         convolverNode.connect(wetGain);
         
-        // Смешиваем сухой и мокрый сигналы
         dryGain.connect(gainNode);
         wetGain.connect(gainNode);
         
         gainNode.connect(analyser);
         analyser.connect(audioContext.destination);
 
-        // Сохраняем ссылки для управления эффектами
         currentAudio.dryGain = dryGain;
         currentAudio.wetGain = wetGain;
     }
 
-    // Функция для применения эффекта pitch (базовая реализация через playbackRate)
     function applyPitchShift(semitones) {
         if (!currentAudio) return;
         
-        // Преобразуем полутона в коэффициент частоты
         const pitchFactor = Math.pow(2, semitones / 12);
         currentAudio.preservesPitch = false;
         currentAudio.playbackRate = currentAudio.playbackRate || 1;
         
-        // Применяем pitch без изменения скорости (приблизительно)
         const speedSliderValue = parseFloat(sliders.speed.slider.value);
         currentAudio.playbackRate = speedSliderValue * pitchFactor;
     }
@@ -209,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 progressBar.disabled = false;
                 progressBar.max = currentAudio.duration;
                 
-                // Настраиваем аудио эффекты после загрузки
                 setupAudioEffects();
             });
 
@@ -289,8 +271,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     bassFilter.gain.value = parseFloat(this.value);
                 }
             }
-            
-            console.log(`${sliderName} изменен на: ${this.value}`);
         });
     });
 
@@ -320,8 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 bassFilter.gain.value = 0;
             }
         }
-
-        console.log('Все настройки сброшены');
     }
 
     resetButton.addEventListener('click', resetAllSettings);
@@ -350,6 +328,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const animatedElements = document.querySelectorAll('.settings-container, .audio-container');
     animatedElements.forEach(el => observer.observe(el));
-
-    console.log('Slowchik Audio Player инициализирован');
 });
+

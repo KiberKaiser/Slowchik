@@ -23,14 +23,13 @@ body {
     overflow-x: hidden;
 }
 
-
 .main-section {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40px 20px;
-    background: linear-gradient(135deg, #0d1421 0%, #1a1a2e 50%, #16213e 100%);
+    background: radial-gradient(circle, hsla(229, 73%, 58%, 1) 0%, hsla(246, 42%, 23%, 1) 70%, hsla(243, 69%, 12%, 1) 100%);
     position: relative;
 }
 
@@ -338,8 +337,9 @@ body {
     padding: 40px 20px;
     display: grid;
     grid-template-columns: 1fr 2fr;
-    grid-gap: 20px;
-    align-items: stretch;
+    grid-gap: 40px;
+    align-items: center;
+    justify-content: center;
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -357,10 +357,7 @@ body {
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     display: flex;
     flex-direction: column;
-    min-height: 60vh;
     height: fit-content;
-    position: sticky;
-    top: 20px;
 }
 
 .audio-container {
@@ -376,7 +373,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    min-height: 60vh;
     height: fit-content;
 }
 
@@ -567,7 +563,16 @@ button:active {
     text-align: center;
 }
 
-.upload-btn {
+.button-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.upload-btn,
+.download-btn {
     background: linear-gradient(145deg, #2a2a2a 0%, #363636 100%);
     color: #e0e0e0;
     border: 1px solid #444;
@@ -580,7 +585,6 @@ button:active {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 0 auto;
     font-family: "VCR_OSD_MONO", "Courier New", monospace;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -589,7 +593,8 @@ button:active {
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.upload-btn:hover {
+.upload-btn:hover,
+.download-btn:hover:not(:disabled) {
     background: linear-gradient(145deg, #363636 0%, #404040 100%);
     border-color: #ff6b35;
     color: #ff6b35;
@@ -597,6 +602,16 @@ button:active {
         0 3px 6px rgba(0, 0, 0, 0.4),
         0 0 8px rgba(255, 107, 53, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.download-btn:disabled {
+    background: linear-gradient(145deg, #1a1a1a 0%, #202020 100%);
+    color: #666;
+    border-color: #333;
+    cursor: not-allowed;
+    box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .upload-icon {
@@ -628,6 +643,37 @@ button:active {
     top: 2px;
     left: 6px;
     transform: rotate(-45deg);
+}
+
+.download-icon {
+    width: 18px;
+    height: 18px;
+    position: relative;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.download-icon::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 12px;
+    border: 1px solid currentColor;
+    border-radius: 1px;
+    top: 6px;
+    left: 2px;
+}
+
+.download-icon::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-bottom: 1px solid currentColor;
+    border-right: 1px solid currentColor;
+    bottom: 2px;
+    left: 6px;
+    transform: rotate(45deg);
 }
 
 .file-info {
@@ -790,6 +836,35 @@ button:active {
     display: flex;
     align-items: center;
     gap: 8px;
+    position: relative;
+}
+
+.volume-control::before {
+    content: '';
+    position: absolute;
+    width: 3px;
+    height: 10px;
+    border: 1px solid #b0b0b0;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.7;
+}
+
+.volume-control::after {
+    content: '';
+    position: absolute;
+    width: 5px;
+    height: 14px;
+    border: 1px solid #b0b0b0;
+    border-left: none;
+    border-radius: 0 12px 12px 0;
+    left: 29px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
 }
 
 .volume-icon {
@@ -821,35 +896,6 @@ button:active {
     top: 5px;
 }
 
-/* Звуковые волны */
-.volume-control::before {
-    content: '';
-    position: absolute;
-    width: 3px;
-    height: 10px;
-    border: 1px solid #b0b0b0;
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-    right: 90px;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0.7;
-}
-
-.volume-control::after {
-    content: '';
-    position: absolute;
-    width: 5px;
-    height: 14px;
-    border: 1px solid #b0b0b0;
-    border-left: none;
-    border-radius: 0 12px 12px 0;
-    right: 85px;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0.5;
-}
-
 #volumeSlider {
     width: 80px;
     appearance: none;
@@ -873,27 +919,12 @@ button:active {
 @media (max-width: 1200px) {
     .app-section {
         grid-template-columns: 1fr;
-        grid-gap: 20px;
+        grid-gap: 30px;
         max-width: 1000px;
-    }
-    
-    .settings-container {
-        position: static;
-        min-height: auto;
-        height: auto;
-    }
-    
-    .audio-container {
-        min-height: auto;
-        height: auto;
     }
 }
 
 @media (max-width: 768px) {
-    .hero-section {
-        padding: 20px 10px;
-    }
-    
     .features-grid {
         grid-template-columns: 1fr;
         gap: 20px;

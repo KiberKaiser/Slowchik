@@ -3,9 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <title>Slowchik - Audio Player</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -66,7 +63,7 @@
                 
                 <div class="control-group">
                     <label for="pitch">Pitch</label>
-                    <input type="range" id="pitch" min="-12" max="12" step="1" value="0">
+                    <input type="range" id="pitch" min="-5" max="5" step="0.5" value="0">
                     <span class="value" id="pitch-value">0</span>
                 </div>
                 
@@ -85,10 +82,16 @@
         <div class="audio-container">
             <div class="upload-section">
                 <input type="file" id="audioFile" accept="audio/*" style="display: none;">
-                <button id="uploadBtn" class="upload-btn">
-                    <span class="upload-icon"></span>
-                    Load Audio File
-                </button>
+                <div class="button-row">
+                    <button id="uploadBtn" class="upload-btn">
+                        <span class="upload-icon"></span>
+                        Load Audio File
+                    </button>
+                    <button id="downloadBtn" class="download-btn" disabled>
+                        <span class="download-icon"></span>
+                        Download
+                    </button>
+                </div>
                 <div class="file-info" id="fileInfo">No file selected</div>
             </div>
 
