@@ -136,61 +136,75 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             downloadBtn.disabled = true;
             downloadBtn.innerHTML = '<span class="download-icon"></span>Processing...';
-
-            const offlineContext = new OfflineAudioContext(
-                2, 
-                audioContext.sampleRate * currentAudio.duration,
-                audioContext.sampleRate
-            );
-
-
             const response = await fetch(currentAudio.src);
             const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await offlineContext.decodeAudioData(arrayBuffer);
+            const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
 
-
-            const source = offlineContext.createBufferSource();
-            source.buffer = audioBuffer;
-
+       
             const speedValue = parseFloat(sliders.speed.slider.value);
             const pitchValue = parseInt(sliders.pitch.slider.value);
             const pitchFactor = Math.pow(2, pitchValue / 12);
-            source.playbackRate.value = speedValue * pitchFactor;
+            const effectiveRate = speedValue * pitchFactor || 1;
 
-            const bassFilter = offlineContext.createBiquadFilter();
-            bassFilter.type = 'lowshelf';
-            bassFilter.frequency.value = 200;
-            bassFilter.gain.value = parseFloat(sliders.bass.slider.value);
+            const baseDuration = decodedBuffer.duration / effectiveRate; 
+
+
+            const reverbAmount = parseFloat(sliders.reverb.slider.value) / 100;
+            const reverbTail = reverbAmount > 0 ? 2 : 0; 
+            const targetDuration = baseDuration + reverbTail;
+
+            const sampleRate = audioContext.sampleRate;
+            const totalFrames = Math.ceil(sampleRate * targetDuration);
+            const offlineContext = new OfflineAudioContext(2, totalFrames, sampleRate);
+
+            const source = offlineContext.createBufferSource();
+            source.buffer = decodedBuffer;
+            source.playbackRate.value = effectiveRate;
+
+            const bassFilterNode = offlineContext.createBiquadFilter();
+            bassFilterNode.type = 'lowshelf';
+            bassFilterNode.frequency.value = 200;
+            bassFilterNode.gain.value = parseFloat(sliders.bass.slider.value);
 
             const convolverNode = offlineContext.createConvolver();
             convolverNode.buffer = createReverbImpulse(2, 2, offlineContext);
 
             const dryGain = offlineContext.createGain();
             const wetGain = offlineContext.createGain();
-            const reverbAmount = parseFloat(sliders.reverb.slider.value) / 100;
             dryGain.gain.value = 1 - reverbAmount * 0.5;
             wetGain.gain.value = reverbAmount;
 
-            source.connect(bassFilter);
-            bassFilter.connect(dryGain);
-            bassFilter.connect(convolverNode);
+            source.connect(bassFilterNode);
+            bassFilterNode.connect(dryGain);
+            bassFilterNode.connect(convolverNode);
             convolverNode.connect(wetGain);
-            
             dryGain.connect(offlineContext.destination);
             wetGain.connect(offlineContext.destination);
 
             source.start(0);
+
             const renderedBuffer = await offlineContext.startRendering();
+
+            let finalBuffer = renderedBuffer;
+            if (reverbTail === 0) {
+                const expectedFrames = Math.ceil(sampleRate * baseDuration);
+                if (renderedBuffer.length > expectedFrames) {
+                    finalBuffer = offlineContext.createBuffer(2, expectedFrames, sampleRate);
+                    for (let ch = 0; ch < 2; ch++) {
+                        finalBuffer.getChannelData(ch).set(renderedBuffer.getChannelData(ch).subarray(0, expectedFrames));
+                    }
+                }
+            }
 
             let audioBlob;
             let fileName;
             
             if (typeof lamejs !== 'undefined') {
-                audioBlob = audioBufferToMp3(renderedBuffer);
+                audioBlob = audioBufferToMp3(finalBuffer);
                 fileName = 'processed_audio.mp3';
             } else {
                 console.warn('MP3 encoder not available, using WAV format');
-                audioBlob = audioBufferToWav(renderedBuffer);
+                audioBlob = audioBufferToWav(finalBuffer);
                 fileName = 'processed_audio.wav';
             }
             
@@ -546,6 +560,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const animatedElements = document.querySelectorAll('.settings-container, .audio-container');
     animatedElements.forEach(el => observer.observe(el));
-
 });
-
