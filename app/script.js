@@ -1,15 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     let audioContext;
-    let audioSource;
     let analyser;
-    let dataArray;
     let isPlaying = false;
     let currentAudio = null;
-    
     let gainNode;
     let bassFilter;
     let convolverNode;
-    let pitchShiftNode;
+
 
     const sliders = {
         speed: {
@@ -46,6 +43,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = visualizer.getContext('2d');
     const resetButton = document.getElementById('reset');
     const downloadBtn = document.getElementById('downloadBtn');
+
+    let visualizerStarted = false;
+
+    let originalDuration = 0;
+
+    function updateEffectiveDurationDisplay() {
+        if (!currentAudio || !originalDuration) return;
+        const effectiveRate = currentAudio.playbackRate || 1;
+        const effectiveDuration = originalDuration / effectiveRate; 
+        totalTimeSpan.textContent = formatTime(effectiveDuration);
+    }
 
     function initAudioContext() {
         if (!audioContext) {
@@ -129,35 +137,31 @@ document.addEventListener('DOMContentLoaded', function() {
             downloadBtn.disabled = true;
             downloadBtn.innerHTML = '<span class="download-icon"></span>Processing...';
 
-            // Create offline context for rendering
             const offlineContext = new OfflineAudioContext(
-                2, // stereo
+                2, 
                 audioContext.sampleRate * currentAudio.duration,
                 audioContext.sampleRate
             );
 
-            // Create audio buffer from current audio
+
             const response = await fetch(currentAudio.src);
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await offlineContext.decodeAudioData(arrayBuffer);
 
-            // Create source and apply effects
+
             const source = offlineContext.createBufferSource();
             source.buffer = audioBuffer;
 
-            // Apply speed/pitch effects
             const speedValue = parseFloat(sliders.speed.slider.value);
             const pitchValue = parseInt(sliders.pitch.slider.value);
             const pitchFactor = Math.pow(2, pitchValue / 12);
             source.playbackRate.value = speedValue * pitchFactor;
 
-            // Create bass filter
             const bassFilter = offlineContext.createBiquadFilter();
             bassFilter.type = 'lowshelf';
             bassFilter.frequency.value = 200;
             bassFilter.gain.value = parseFloat(sliders.bass.slider.value);
 
-            // Create reverb
             const convolverNode = offlineContext.createConvolver();
             convolverNode.buffer = createReverbImpulse(2, 2, offlineContext);
 
@@ -167,7 +171,6 @@ document.addEventListener('DOMContentLoaded', function() {
             dryGain.gain.value = 1 - reverbAmount * 0.5;
             wetGain.gain.value = reverbAmount;
 
-            // Connect audio graph
             source.connect(bassFilter);
             bassFilter.connect(dryGain);
             bassFilter.connect(convolverNode);
@@ -176,11 +179,9 @@ document.addEventListener('DOMContentLoaded', function() {
             dryGain.connect(offlineContext.destination);
             wetGain.connect(offlineContext.destination);
 
-            // Start rendering
             source.start(0);
             const renderedBuffer = await offlineContext.startRendering();
 
-            // Convert to MP3 and download
             let audioBlob;
             let fileName;
             
@@ -232,11 +233,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const sampleRate = buffer.sampleRate;
         const samples = buffer.length;
 
-        // Convert AudioBuffer to interleaved PCM data
+    
         const left = buffer.getChannelData(0);
         const right = channels > 1 ? buffer.getChannelData(1) : left;
         
-        // Convert float samples to 16-bit PCM
+    
         const leftSamples = new Int16Array(samples);
         const rightSamples = new Int16Array(samples);
         
@@ -245,12 +246,12 @@ document.addEventListener('DOMContentLoaded', function() {
             rightSamples[i] = Math.max(-32768, Math.min(32767, right[i] * 32767));
         }
 
-        // Initialize MP3 encoder
-        const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128); // 128 kbps
+      
+        const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128); 
         const mp3Data = [];
 
-        // Encode in chunks
-        const chunkSize = 1152; // Standard MP3 frame size
+        
+        const chunkSize = 1152; 
         for (let i = 0; i < samples; i += chunkSize) {
             const leftChunk = leftSamples.subarray(i, i + chunkSize);
             const rightChunk = rightSamples.subarray(i, i + chunkSize);
@@ -261,13 +262,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Flush remaining data
+      
         const mp3buf = mp3encoder.flush();
         if (mp3buf.length > 0) {
             mp3Data.push(mp3buf);
         }
 
-        // Create blob
+    
         return new Blob(mp3Data, { type: 'audio/mp3' });
     }
 
@@ -278,7 +279,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const arrayBuffer = new ArrayBuffer(44 + length * numberOfChannels * 2);
         const view = new DataView(arrayBuffer);
 
-        // WAV header
         const writeString = (offset, string) => {
             for (let i = 0; i < string.length; i++) {
                 view.setUint8(offset + i, string.charCodeAt(i));
@@ -299,7 +299,6 @@ document.addEventListener('DOMContentLoaded', function() {
         writeString(36, 'data');
         view.setUint32(40, length * numberOfChannels * 2, true);
 
-        // Convert audio data
         let offset = 44;
         for (let i = 0; i < length; i++) {
             for (let channel = 0; channel < numberOfChannels; channel++) {
@@ -332,33 +331,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function drawVisualizer() {
-        if (!analyser) return;
-
         requestAnimationFrame(drawVisualizer);
 
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        analyser.getByteFrequencyData(dataArray);
+        let bufferLength;
+        let freqData;
+        if (analyser) {
+            bufferLength = analyser.frequencyBinCount;
+            freqData = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(freqData);
+        } else {
+            bufferLength = 64;
+            freqData = new Uint8Array(bufferLength);
+            const t = performance.now() * 0.002;
+            for (let i = 0; i < bufferLength; i++) {
+                const n = i / bufferLength;
+                const base = (Math.sin(t + n * 6) + 1) * 0.5; 
+                const mod = (Math.sin(t * 0.3 + n * 20) + 1) * 0.5;
+                const val = base * 0.7 + mod * 0.3 + Math.random() * 0.15;
+                freqData[i] = Math.min(255, val * 255);
+            }
+        }
 
         ctx.fillStyle = 'rgb(26, 26, 26)';
         ctx.fillRect(0, 0, visualizer.width, visualizer.height);
 
         const barWidth = (visualizer.width / bufferLength) * 2.5;
-        let barHeight;
         let x = 0;
 
         for (let i = 0; i < bufferLength; i++) {
-            barHeight = (dataArray[i] / 255) * visualizer.height * 0.8;
-
+            const barHeight = (freqData[i] / 255) * visualizer.height * 0.8;
             const r = barHeight + 25 * (i / bufferLength);
             const g = 250 * (i / bufferLength);
             const b = 50;
-
             ctx.fillStyle = `rgb(${r},${g},${b})`;
             ctx.fillRect(x, visualizer.height - barHeight, barWidth, barHeight);
-
             x += barWidth + 1;
         }
+    }
+
+    function ensureVisualizerRunning() {
+        if (visualizerStarted) return;
+        visualizerStarted = true;
+        const placeholder = document.querySelector('.visualizer-placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+        drawVisualizer();
     }
 
     uploadBtn.addEventListener('click', () => {
@@ -381,7 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             currentAudio = new Audio(url);
             currentAudio.addEventListener('loadedmetadata', function() {
-                totalTimeSpan.textContent = formatTime(currentAudio.duration);
+                originalDuration = currentAudio.duration; 
+                totalTimeSpan.textContent = formatTime(originalDuration);
                 playPauseBtn.disabled = false;
                 progressBar.disabled = false;
                 progressBar.max = currentAudio.duration;
@@ -394,6 +411,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!isPlaying) return;
                 currentTimeSpan.textContent = formatTime(currentAudio.currentTime);
                 progressBar.value = currentAudio.currentTime;
+
+                updateEffectiveDurationDisplay();
             });
 
             currentAudio.addEventListener('ended', function() {
@@ -402,8 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 playIcon.className = 'play-icon play';
             });
 
-            document.querySelector('.visualizer-placeholder').style.display = 'none';
-            drawVisualizer();
+            ensureVisualizerRunning();
         }
     });
 
@@ -453,6 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const pitchValue = parseInt(sliders.pitch.slider.value);
                     const pitchFactor = Math.pow(2, pitchValue / 12);
                     currentAudio.playbackRate = speedValue * pitchFactor;
+                    updateEffectiveDurationDisplay();
                 }
                 else if (sliderName === 'reverb' && currentAudio.wetGain && currentAudio.dryGain) {
                     const reverbAmount = parseFloat(this.value) / 100;
@@ -461,6 +480,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 else if (sliderName === 'pitch') {
                     applyPitchShift(parseInt(this.value));
+                    updateEffectiveDurationDisplay();
                 }
                 else if (sliderName === 'bass' && bassFilter) {
                     bassFilter.gain.value = parseFloat(this.value);
@@ -494,6 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (bassFilter) {
                 bassFilter.gain.value = 0;
             }
+            updateEffectiveDurationDisplay();
         }
     }
 
@@ -525,5 +546,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const animatedElements = document.querySelectorAll('.settings-container, .audio-container');
     animatedElements.forEach(el => observer.observe(el));
+
 });
 
