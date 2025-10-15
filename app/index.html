@@ -24,7 +24,7 @@
                 <div class="feature-card">
                     <div class="feature-icon effects"></div>
                     <h3>Audio Effects</h3>
-                    <p>Speed control, reverb, pitch shifting, and bass enhancement</p>
+                    <p>Speed control, reverb, pitch shifting, bass enhancement, delay, and chorus</p>
                 </div>
                 
                 <div class="feature-card">
@@ -74,34 +74,56 @@
                     <input type="range" id="bass" min="0" max="30" step="1" value="0">
                     <span class="value" id="bass-value">0%</span>
                 </div>
-            </div>
-            
-            <div class="reset-button">
-                <button id="reset">Reset Settings</button>
-            </div>
+
+                <div class="control-group">
+                    <label for="delay">Delay</label>
+                    <input type="range" id="delay" min="0" max="100" step="1" value="0">
+                    <span class="value" id="delay-value">0%</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="chorus">Chorus</label>
+                    <input type="range" id="chorus" min="0" max="100" step="1" value="0">
+                    <span class="value" id="chorus-value">0%</span>
+                </div>
+                
+                <div class="presets-row">
+                    <div class="presets-group">
+                        <label for="presets">Presets</label>
+                        <div class="presets-buttons">
+                            <button id="slowedReverbBtn" class="preset-btn">Slowed + Reverb</button>
+                            <button id="nightcoreBtn" class="preset-btn">Nightcore</button>
+                        </div>
+                    </div>
+                    <div class="reset-group">
+                        <button id="reset" class="reset-btn">Reset Settings</button>
+                    </div>
+                </div>
+            </div>          
         </div>
 
         <div class="audio-container">
             <div class="upload-section">
                 <input type="file" id="audioFile" accept="audio/*" style="display: none;">
-                <div class="button-row">
-                    <button id="uploadBtn" class="upload-btn">
-                        <span class="upload-icon"></span>
-                        Load Audio File
-                    </button>
-                    <button id="downloadBtn" class="download-btn" disabled>
-                        <span class="download-icon"></span>
-                        Download
-                    </button>
+                <div class="drag-drop-zone" id="dragDropZone">
+                    <div class="drag-drop-content">
+                        <div class="drag-drop-icon"></div>
+                        <h3>Drag & Drop Audio File</h3>
+                        <p>or click to browse</p>
+                        <div class="supported-formats">Supports: MP3, WAV, OGG, M4A, FLAC</div>
+                    </div>
+                    <div class="drag-overlay" id="dragOverlay">
+                        <div class="drag-overlay-content">
+                            <div class="drop-icon"></div>
+                            <h3>Drop file here</h3>
+                        </div>
+                    </div>
                 </div>
                 <div class="file-info" id="fileInfo">No file selected</div>
             </div>
 
             <div class="visualizer-section">
                 <canvas id="visualizer" width="800" height="200"></canvas>
-                <div class="visualizer-placeholder">
-                    <span>Audio visualization will appear here</span>
-                </div>
             </div>
 
             <div class="playback-controls">
@@ -120,8 +142,52 @@
                     <input type="range" id="volumeSlider" min="0" max="100" value="50">
                 </div>
             </div>
+
+            <div class="bottom-controls-container">
+                <div class="track-controls">
+                    <div class="track-controls-row">
+                        <button id="rewindBtn" class="track-btn" disabled>
+                            <span class="rewind-icon"></span>
+                        </button>
+                        
+                        <button id="loopBtn" class="track-btn">
+                            <span class="loop-icon"></span>
+                        </button>
+                        
+                        <button id="forwardBtn" class="track-btn" disabled>
+                            <span class="forward-icon"></span>
+                        </button>
+                        
+                        <button id="muteBtn" class="track-btn">
+                            <span class="mute-icon"></span>
+                        </button>
+                    </div>
+                </div>
+                <div class="download-section">
+                        <button id="clearBtn" class="clear-btn" disabled>
+                            <span class="clear-icon"></span>
+                            Clear
+                        </button>
+                        <button id="downloadBtn" class="download-btn" disabled>
+                            <span class="download-icon"></span>
+                            Download
+                        </button>
+                    </div>
+            </div>
         </div>
     </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>© 2025 Slowchik - Advanced Audio Processing Platform</p>
+            <div class="footer-links">
+                <a href="https://github.com/KiberKaiser/Slowchik" target="_blank" rel="noopener noreferrer" class="github-link">
+                    <span class="github-icon"></span>
+                    View on GitHub
+                </a>
+            </div>
+        </div>
+    </footer>
 
     <script src="script.js"></script>
 </body>
