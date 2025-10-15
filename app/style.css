@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'VCR_OSD_MONO';
-    src: url('/fonts/VCR_OSD_MONO.ttf') format('truetype');
+    src: url('fonts/VCR_OSD_MONO.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -8,7 +8,7 @@
 
 @font-face {
     font-family: 'FSEX300';
-    src: url('/fonts/FSEX300.ttf') format('truetype');
+    src: url('fonts/FSEX300.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -1601,3 +1601,4 @@ button:active {
     }
 
 }
+
