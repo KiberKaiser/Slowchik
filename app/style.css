@@ -1280,7 +1280,6 @@ button:active {
     border: 1px solid #006b5a;
 }
 
-/* Track Control Icons */
 .rewind-icon {
     width: 16px;
     height: 16px;
@@ -1443,16 +1442,43 @@ button:active {
         border-width: 2px;
     }
     
+    .bottom-controls-container {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .track-controls {
+        justify-content: center;
+        width: 100%;
+    }
+    
     .track-controls-row {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 8px;
         padding: 10px 15px;
+        justify-content: center;
+        width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .track-controls-row::-webkit-scrollbar {
+        display: none;
     }
     
     .track-btn {
         min-width: 44px;
         height: 44px;
         padding: 10px;
+        flex: 0 0 auto;
+    }
+    
+    .download-section {
+        justify-content: center;
+        width: 100%;
+        gap: 10px;
     }
     
     .track-btn .btn-text {
@@ -1477,6 +1503,35 @@ button:active {
     .features-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 20px;
+    }
+}
+
+@media (max-width: 650px) {
+    .bottom-controls-container {
+        flex-direction: column-reverse !important;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .track-controls {
+        order: -1;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .track-controls-row {
+        justify-content: center;
+        width: 100%;
+        flex-wrap: nowrap;
+        gap: 8px;
+        padding: 10px 15px;
+    }
+    
+    .download-section {
+        order: 1;
+        justify-content: center;
+        width: 100%;
+        gap: 10px;
     }
 }
 
@@ -1599,6 +1654,4 @@ button:active {
         font-size: 0.85rem;
         padding: 10px 18px;
     }
-
 }
-
